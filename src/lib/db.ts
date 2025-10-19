@@ -57,6 +57,30 @@ export interface Case {
   updatedAt: string;
 }
 
+export interface Incident {
+  id: string;
+  title: string;
+  date: string;
+  importance: 'کم' | 'متوسط' | 'زیاد' | 'بحرانی';
+  followUp?: string;
+  description: string;
+  recordsAndNotes?: string;
+  securityOpinion?: string;
+  involvedPersons: string[];
+  updates: IncidentUpdate[];
+  status: 'فعال' | 'در حال بررسی' | 'بسته';
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IncidentUpdate {
+  id: string;
+  text: string;
+  createdBy: string;
+  createdAt: string;
+}
+
 export interface Attachment {
   id: string;
   fileName: string;
@@ -208,6 +232,67 @@ class Database {
   getAttachmentById(id: string): Attachment | null {
     const attachments = this.getAttachments();
     return attachments.find(a => a.id === id) || null;
+  }
+
+  // Incidents
+  getIncidents(): Incident[] {
+    return this.getItem<Incident>('incidents');
+  }
+
+  getIncidentById(id: string): Incident | null {
+    const incidents = this.getIncidents();
+    return incidents.find(i => i.id === id) || null;
+  }
+
+  addIncident(incident: Omit<Incident, 'id' | 'createdAt' | 'updatedAt' | 'updates'>): Incident {
+    const incidents = this.getIncidents();
+    const newIncident: Incident = {
+      ...incident,
+      id: uuidv4(),
+      updates: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    incidents.push(newIncident);
+    this.setItem('incidents', incidents);
+    return newIncident;
+  }
+
+  updateIncident(id: string, updates: Partial<Incident>): Incident | null {
+    const incidents = this.getIncidents();
+    const index = incidents.findIndex(i => i.id === id);
+    if (index === -1) return null;
+    
+    incidents[index] = {
+      ...incidents[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    this.setItem('incidents', incidents);
+    return incidents[index];
+  }
+
+  addIncidentUpdate(incidentId: string, updateText: string, userId: string): Incident | null {
+    const incident = this.getIncidentById(incidentId);
+    if (!incident) return null;
+
+    const newUpdate: IncidentUpdate = {
+      id: uuidv4(),
+      text: updateText,
+      createdBy: userId,
+      createdAt: new Date().toISOString(),
+    };
+
+    incident.updates.push(newUpdate);
+    return this.updateIncident(incidentId, { updates: incident.updates });
+  }
+
+  deleteIncident(id: string): boolean {
+    const incidents = this.getIncidents();
+    const filtered = incidents.filter(i => i.id !== id);
+    if (filtered.length === incidents.length) return false;
+    this.setItem('incidents', filtered);
+    return true;
   }
 
   // Initialize default admin

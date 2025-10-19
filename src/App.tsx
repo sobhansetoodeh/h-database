@@ -10,6 +10,9 @@ import { Header } from "@/components/Layout/Header";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import GlobalSearch from "./pages/GlobalSearch";
+import Incidents from "./pages/Incidents";
+import IncidentForm from "./pages/IncidentForm";
+import IncidentDetail from "./pages/IncidentDetail";
 import Students from "./pages/Students";
 import StudentForm from "./pages/StudentForm";
 import Staff from "./pages/Staff";
@@ -67,6 +70,38 @@ const AppRoutes = () => {
         element={
           <ProtectedLayout>
             <GlobalSearch />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/incidents"
+        element={
+          <ProtectedLayout>
+            <Incidents />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/incidents/new"
+        element={
+          <ProtectedLayout>
+            <IncidentForm />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/incidents/:id"
+        element={
+          <ProtectedLayout>
+            <IncidentDetail />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/incidents/:id/edit"
+        element={
+          <ProtectedLayout>
+            <IncidentForm />
           </ProtectedLayout>
         }
       />
