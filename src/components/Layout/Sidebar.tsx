@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, Briefcase, GraduationCap, FileText, Moon, Sun, ChevronRight } from 'lucide-react';
+import { Home, Users, Briefcase, GraduationCap, FileText, Moon, Sun, ChevronRight, Search } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -12,6 +12,7 @@ interface SidebarProps {
 
 const menuItems = [
   { icon: Home, label: 'داشبورد', path: '/' },
+  { icon: Search, label: 'جستجو', path: '/search' },
   { icon: Users, label: 'دانشجویان', path: '/students' },
   { icon: Briefcase, label: 'کارکنان', path: '/staff' },
   { icon: GraduationCap, label: 'اساتید', path: '/faculty' },

@@ -9,9 +9,13 @@ import { Sidebar } from "@/components/Layout/Sidebar";
 import { Header } from "@/components/Layout/Header";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import GlobalSearch from "./pages/GlobalSearch";
 import Students from "./pages/Students";
+import StudentForm from "./pages/StudentForm";
 import Staff from "./pages/Staff";
+import StaffForm from "./pages/StaffForm";
 import Faculty from "./pages/Faculty";
+import FacultyForm from "./pages/FacultyForm";
 import Cases from "./pages/Cases";
 import NotFound from "./pages/NotFound";
 import { useState } from "react";
@@ -59,10 +63,34 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/search"
+        element={
+          <ProtectedLayout>
+            <GlobalSearch />
+          </ProtectedLayout>
+        }
+      />
+      <Route
         path="/students"
         element={
           <ProtectedLayout>
             <Students />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/students/new"
+        element={
+          <ProtectedLayout>
+            <StudentForm />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/students/:id/edit"
+        element={
+          <ProtectedLayout>
+            <StudentForm />
           </ProtectedLayout>
         }
       />
@@ -75,10 +103,42 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/staff/new"
+        element={
+          <ProtectedLayout>
+            <StaffForm />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/staff/:id/edit"
+        element={
+          <ProtectedLayout>
+            <StaffForm />
+          </ProtectedLayout>
+        }
+      />
+      <Route
         path="/faculty"
         element={
           <ProtectedLayout>
             <Faculty />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/faculty/new"
+        element={
+          <ProtectedLayout>
+            <FacultyForm />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/faculty/:id/edit"
+        element={
+          <ProtectedLayout>
+            <FacultyForm />
           </ProtectedLayout>
         }
       />
