@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, Briefcase, GraduationCap, FileText, Moon, Sun, ChevronRight, Search, AlertTriangle } from 'lucide-react';
+import { Home, Users, Briefcase, GraduationCap, FileText, Moon, Sun, ChevronRight, Search, AlertTriangle, Settings } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,7 @@ const menuItems = [
   { icon: Briefcase, label: 'کارکنان', path: '/staff' },
   { icon: GraduationCap, label: 'اساتید', path: '/faculty' },
   { icon: FileText, label: 'پرونده‌ها', path: '/cases' },
+  { icon: Settings, label: 'تنظیمات', path: '/settings' },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
@@ -35,8 +36,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         {/* Logo Section */}
         <div className="p-4 border-b border-sidebar-border">
           <div className="flex items-center justify-center mb-2">
-            <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-xl">
-              ح
+            <div className="w-12 h-12 rounded-lg bg-primary/10 overflow-hidden flex items-center justify-center">
+              {/* Replace /placeholder.svg with your logo path */}
+              <img 
+                src="/placeholder.svg" 
+                alt="لوگو" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const fallback = target.parentElement?.querySelector('.fallback-logo');
+                  if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                }}
+              />
+              <div className="fallback-logo hidden w-full h-full bg-primary items-center justify-center text-primary-foreground font-bold text-xl">
+                ح
+              </div>
             </div>
           </div>
           {isOpen && (

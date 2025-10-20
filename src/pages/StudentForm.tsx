@@ -11,12 +11,16 @@ import { ArrowRight } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PersianDatePicker } from '@/components/PersianDatePicker';
 import { Checkbox } from '@/components/ui/checkbox';
+import { FileUpload } from '@/components/FileUpload';
+import { useAuth } from '@/contexts/AuthContext';
 
 const StudentForm: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const isEdit = !!id;
+  const [files, setFiles] = useState<Array<{ id: string; name: string; data: string; type: string }>>([]);
 
   const [formData, setFormData] = useState({
     fullName: '',

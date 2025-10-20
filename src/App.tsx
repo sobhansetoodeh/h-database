@@ -20,6 +20,10 @@ import StaffForm from "./pages/StaffForm";
 import Faculty from "./pages/Faculty";
 import FacultyForm from "./pages/FacultyForm";
 import Cases from "./pages/Cases";
+import CaseDetail from "./pages/CaseDetail";
+import CaseForm from "./pages/CaseForm";
+import PersonDetail from "./pages/PersonDetail";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { useState } from "react";
 
@@ -122,6 +126,14 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/students/:id"
+        element={
+          <ProtectedLayout>
+            <PersonDetail />
+          </ProtectedLayout>
+        }
+      />
+      <Route
         path="/students/:id/edit"
         element={
           <ProtectedLayout>
@@ -142,6 +154,14 @@ const AppRoutes = () => {
         element={
           <ProtectedLayout>
             <StaffForm />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/staff/:id"
+        element={
+          <ProtectedLayout>
+            <PersonDetail />
           </ProtectedLayout>
         }
       />
@@ -170,6 +190,14 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/faculty/:id"
+        element={
+          <ProtectedLayout>
+            <PersonDetail />
+          </ProtectedLayout>
+        }
+      />
+      <Route
         path="/faculty/:id/edit"
         element={
           <ProtectedLayout>
@@ -182,6 +210,38 @@ const AppRoutes = () => {
         element={
           <ProtectedLayout>
             <Cases />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/cases/new"
+        element={
+          <ProtectedLayout>
+            <CaseForm />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/cases/:id"
+        element={
+          <ProtectedLayout>
+            <CaseDetail />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/cases/:id/edit"
+        element={
+          <ProtectedLayout>
+            <CaseForm />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedLayout>
+            <Settings />
           </ProtectedLayout>
         }
       />
