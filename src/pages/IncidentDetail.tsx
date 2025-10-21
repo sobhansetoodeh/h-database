@@ -21,7 +21,7 @@ const IncidentDetail: React.FC = () => {
   const [updateText, setUpdateText] = useState('');
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
-  const incident = id ? db.getIncidentById(id) : null;
+  const incident = id ? sqliteDb.getIncidentById(id) : null;
 
   if (!incident) {
     return (
@@ -39,7 +39,7 @@ const IncidentDetail: React.FC = () => {
   const handleAddUpdate = () => {
     if (!updateText.trim() || !user) return;
 
-    db.addIncidentUpdate(incident.id, updateText, user.id);
+    sqliteDb.addIncidentUpdate(incident.id, updateText, user.id);
     
     toast({
       title: 'بروزرسانی ثبت شد',
@@ -71,7 +71,7 @@ const IncidentDetail: React.FC = () => {
   };
 
   const involvedPeople = incident.involvedPersons
-    .map(id => db.getPersonById(id))
+    .map(id => sqliteDb.getPersonById(id))
     .filter(Boolean);
 
   return (
@@ -209,7 +209,7 @@ const IncidentDetail: React.FC = () => {
                 </p>
               ) : (
                 incident.updates.map((update) => {
-                  const updateUser = db.getHerasatUsers().find(u => u.id === update.createdBy);
+                  const updateUser = sqliteDb.getHerasatUsers().find(u => u.id === update.createdBy);
                   return (
                     <div key={update.id} className="p-4 rounded-lg border bg-card">
                       <div className="flex items-start gap-3">

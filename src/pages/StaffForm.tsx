@@ -38,7 +38,7 @@ const StaffForm: React.FC = () => {
 
   useEffect(() => {
     if (isEdit && id) {
-      const person = db.getPersonById(id);
+      const person = sqliteDb.getPersonById(id);
       if (person) {
         setFormData({
           fullName: person.fullName,
@@ -99,13 +99,13 @@ const StaffForm: React.FC = () => {
     };
 
     if (isEdit && id) {
-      db.updatePerson(id, personData);
+      sqliteDb.updatePerson(id, personData);
       toast({
         title: 'ویرایش موفق',
         description: 'اطلاعات کارمند با موفقیت ویرایش شد',
       });
     } else {
-      db.addPerson(personData);
+      sqliteDb.addPerson(personData);
       toast({
         title: 'ثبت موفق',
         description: 'کارمند با موفقیت ثبت شد',

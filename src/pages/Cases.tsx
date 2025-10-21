@@ -71,17 +71,9 @@ const Cases: React.FC = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
                     <h3 className="font-bold text-lg">{caseItem.title}</h3>
-                    <span
-                      className={`text-xs px-2 py-1 rounded ${
-                        caseItem.status === 'active'
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                          : caseItem.status === 'closed'
-                          ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                          : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
-                      }`}
-                    >
-                      {caseItem.status === 'active' ? 'فعال' : caseItem.status === 'closed' ? 'بسته' : 'در انتظار'}
-                    </span>
+                    <Badge className={getStatusColor(caseItem.status)}>
+                      {caseItem.status}
+                    </Badge>
                   </div>
                   {caseItem.summary && (
                     <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
@@ -89,7 +81,7 @@ const Cases: React.FC = () => {
                     </p>
                   )}
                   <div className="mt-2 text-xs text-muted-foreground">
-                    افراد مرتبط: {toPersianNumber(caseItem.personIds.length)} نفر
+                    افراد مرتبط: {toPersianNumber(caseItem.relatedPersons.length)} نفر
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

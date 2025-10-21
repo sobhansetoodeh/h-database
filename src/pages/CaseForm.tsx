@@ -29,7 +29,7 @@ const CaseForm: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showPersonSelector, setShowPersonSelector] = useState(false);
 
-  const allPeople = db.getPeople();
+  const allPeople = sqliteDb.getPeople();
   const filteredPeople = allPeople.filter(p => 
     p.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.nationalId?.includes(searchTerm) ||
@@ -39,7 +39,7 @@ const CaseForm: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      const caseData = db.getCaseById(id);
+      const caseData = sqliteDb.getCaseById(id);
       if (caseData) {
         setFormData({
           title: caseData.title,
@@ -48,7 +48,7 @@ const CaseForm: React.FC = () => {
           relatedPersons: caseData.relatedPersons,
         });
         
-        const attachments = caseData.attachments?.map(attId => db.getAttachmentById(attId)).filter(Boolean) || [];
+        const attachments = caseData.attachments?.map(attId => sqliteDb.getAttachmentById(attId)).filter(Boolean) || [];
         setFiles(attachments.map(att => ({
           id: att!.id,
           name: att!.fileName,
@@ -72,20 +72,19 @@ const CaseForm: React.FC = () => {
     }
 
     const attachmentIds = files.map(file => {
-      const existingAtt = db.getAttachments().find(a => a.id === file.id);
+      const existingAtt = sqliteDb.getAttachments().find(a => a.id === file.id);
       if (existingAtt) return file.id;
       
-      const newAtt = db.addAttachment({
+      const newAtt = sqliteDb.addAttachment({
         fileName: file.name,
         fileType: file.type,
         fileData: file.data,
-        uploadedBy: user?.id || 'system',
       });
       return newAtt.id;
     });
 
     if (id) {
-      db.updateCase(id, {
+      sqliteDb.updateCase(id, {
         ...formData,
         attachments: attachmentIds,
       });
@@ -94,7 +93,7 @@ const CaseForm: React.FC = () => {
         description: 'پرونده با موفقیت ویرایش شد',
       });
     } else {
-      db.addCase({
+      sqliteDb.addCase({
         ...formData,
         attachments: attachmentIds,
         createdBy: user?.id || 'system',
@@ -186,7 +185,7 @@ const CaseForm: React.FC = () => {
             
             <div className="space-y-2 mb-3">
               {formData.relatedPersons.map(personId => {
-                const person = db.getPersonById(personId);
+                const person = sqliteDb.getPersonById(personId);
                 if (!person) return null;
                 return (
                   <div key={personId} className="flex items-center justify-between p-2 bg-muted rounded">

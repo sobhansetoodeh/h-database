@@ -14,7 +14,7 @@ const Dashboard: React.FC = () => {
     staff: people.filter(p => p.type === 'staff').length,
     faculty: people.filter(p => p.type.startsWith('faculty')).length,
     cases: cases.length,
-    openCases: cases.filter(c => c.status === 'active').length,
+    openCases: cases.filter(c => c.status === 'باز').length,
   };
 
   const statCards = [
@@ -92,16 +92,8 @@ const Dashboard: React.FC = () => {
                   <div className="p-3 rounded-lg border hover:bg-accent/50 transition-colors">
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{caseItem.title}</span>
-                      <span
-                        className={`text-xs px-2 py-1 rounded ${
-                          caseItem.status === 'active'
-                            ? 'bg-green-100 text-green-700'
-                            : caseItem.status === 'closed'
-                            ? 'bg-gray-100 text-gray-700'
-                            : 'bg-yellow-100 text-yellow-700'
-                        }`}
-                      >
-                        {caseItem.status === 'active' ? 'فعال' : caseItem.status === 'closed' ? 'بسته' : 'در انتظار'}
+                      <Badge className={getStatusColor(caseItem.status)}>
+                        {caseItem.status}
                       </span>
                     </div>
                     {caseItem.summary && (
@@ -128,13 +120,13 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
               <span>پرونده‌های بسته</span>
               <span className="font-bold">
-                {toPersianNumber(cases.filter(c => c.status === 'closed').length)}
+                {toPersianNumber(cases.filter(c => c.status === 'بسته').length)}
               </span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-50 dark:bg-yellow-950">
-              <span>در انتظار</span>
+              <span>در حال بررسی</span>
               <span className="font-bold text-yellow-600">
-                {toPersianNumber(cases.filter(c => c.status === 'pending').length)}
+                {toPersianNumber(cases.filter(c => c.status === 'در حال بررسی').length)}
               </span>
             </div>
           </div>

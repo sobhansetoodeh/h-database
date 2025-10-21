@@ -11,27 +11,40 @@ export interface HerasatUser {
 
 export interface Person {
   id: string;
-  type: 'student' | 'staff' | 'faculty';
-  firstName: string;
-  lastName: string;
+  type: 'student' | 'staff' | 'faculty' | 'faculty-heyat' | 'faculty-haghtadris';
   fullName: string;
-  nationalId: string;
-  fatherName?: string;
-  studentId?: string;
-  studentNumber?: string;
-  faculty?: string;
-  major?: string;
-  program?: string;
-  entryYear?: string;
-  isForeign?: boolean;
-  staffId?: string;
-  position?: string;
-  department?: string;
+  nationalId?: string;
+  passportNo?: string;
+  birthDate?: string;
+  gender?: 'مرد' | 'زن';
+  religion?: string;
+  sect?: string;
+  address?: string;
+  city?: string;
+  country?: string;
   phone?: string;
   email?: string;
-  address?: string;
-  emergencyContact?: string;
-  profilePicture?: string;
+  
+  // Student fields
+  studentNumber?: string;
+  faculty?: string;
+  program?: string;
+  enrollmentYear?: string;
+  isForeign?: boolean;
+  
+  // Staff fields
+  employeeNumber?: string;
+  department?: string;
+  position?: string;
+  
+  // Faculty fields
+  facultyType?: 'هیئت علمی' | 'حق التدریس';
+  rank?: string;
+  specialization?: string;
+  
+  // Common
+  notes?: string;
+  attachments?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -39,45 +52,44 @@ export interface Person {
 export interface Case {
   id: string;
   title: string;
-  status: 'active' | 'closed' | 'pending';
+  status: 'باز' | 'بسته' | 'در حال بررسی';
   summary?: string;
-  personIds: string[];
-  attachmentIds: string[];
+  relatedPersons: string[];
+  attachments?: string[];
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Attachment {
   id: string;
-  name: string;
-  fileName?: string;
-  type: string;
-  fileType?: string;
-  size: number;
-  data: string; // base64
-  fileData?: string;
-  uploadedAt?: string;
-  createdAt: string;
+  fileName: string;
+  fileType: string;
+  fileData: string; // base64
+  uploadedAt: string;
 }
 
 export interface Incident {
   id: string;
   title: string;
-  type: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  status: 'open' | 'in-progress' | 'resolved' | 'closed';
+  date: string;
+  importance: 'کم' | 'متوسط' | 'زیاد' | 'بحرانی';
+  followUp?: string;
   description: string;
-  location?: string;
-  personIds: string[];
-  attachmentIds: string[];
+  recordsAndNotes?: string;
+  securityOpinion?: string;
+  involvedPersons: string[];
+  status: 'فعال' | 'در حال بررسی' | 'بسته';
   updates: IncidentUpdate[];
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface IncidentUpdate {
   id: string;
-  message: string;
+  text: string;
+  createdBy: string;
   createdAt: string;
 }
 
@@ -118,26 +130,31 @@ class SQLiteDatabase {
       CREATE TABLE IF NOT EXISTS people (
         id TEXT PRIMARY KEY,
         type TEXT NOT NULL,
-        firstName TEXT NOT NULL,
-        lastName TEXT NOT NULL,
         fullName TEXT NOT NULL,
-        nationalId TEXT NOT NULL,
-        fatherName TEXT,
-        studentId TEXT,
-        studentNumber TEXT,
-        faculty TEXT,
-        major TEXT,
-        program TEXT,
-        entryYear TEXT,
-        isForeign INTEGER,
-        staffId TEXT,
-        position TEXT,
-        department TEXT,
+        nationalId TEXT,
+        passportNo TEXT,
+        birthDate TEXT,
+        gender TEXT,
+        religion TEXT,
+        sect TEXT,
+        address TEXT,
+        city TEXT,
+        country TEXT,
         phone TEXT,
         email TEXT,
-        address TEXT,
-        emergencyContact TEXT,
-        profilePicture TEXT,
+        studentNumber TEXT,
+        faculty TEXT,
+        program TEXT,
+        enrollmentYear TEXT,
+        isForeign INTEGER,
+        employeeNumber TEXT,
+        department TEXT,
+        position TEXT,
+        facultyType TEXT,
+        rank TEXT,
+        specialization TEXT,
+        notes TEXT,
+        attachments TEXT,
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL
       );
@@ -147,32 +164,34 @@ class SQLiteDatabase {
         title TEXT NOT NULL,
         status TEXT NOT NULL,
         summary TEXT,
-        personIds TEXT,
-        attachmentIds TEXT,
+        relatedPersons TEXT,
+        attachments TEXT,
+        createdBy TEXT,
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL
       );
 
       CREATE TABLE IF NOT EXISTS attachments (
         id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        type TEXT NOT NULL,
-        size INTEGER NOT NULL,
-        data TEXT NOT NULL,
-        createdAt TEXT NOT NULL
+        fileName TEXT NOT NULL,
+        fileType TEXT NOT NULL,
+        fileData TEXT NOT NULL,
+        uploadedAt TEXT NOT NULL
       );
 
       CREATE TABLE IF NOT EXISTS incidents (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
-        type TEXT NOT NULL,
-        severity TEXT NOT NULL,
-        status TEXT NOT NULL,
+        date TEXT NOT NULL,
+        importance TEXT NOT NULL,
+        followUp TEXT,
         description TEXT NOT NULL,
-        location TEXT,
-        personIds TEXT,
-        attachmentIds TEXT,
+        recordsAndNotes TEXT,
+        securityOpinion TEXT,
+        involvedPersons TEXT,
+        status TEXT NOT NULL,
         updates TEXT,
+        createdBy TEXT,
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL
       );
@@ -272,22 +291,27 @@ class SQLiteDatabase {
     return undefined;
   }
 
-  addPerson(person: Person) {
+  addPerson(person: Omit<Person, 'id' | 'createdAt' | 'updatedAt'> & Partial<Pick<Person, 'id' | 'createdAt' | 'updatedAt'>>) {
     if (!this.db) return;
+    const id = person.id || crypto.randomUUID();
+    const createdAt = person.createdAt || new Date().toISOString();
+    const updatedAt = person.updatedAt || new Date().toISOString();
+    
     this.db.run(
-      `INSERT INTO people VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO people VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        person.id, person.type, person.firstName, person.lastName, person.fullName,
-        person.nationalId, person.fatherName || null, person.studentId || null,
-        person.studentNumber || null, person.faculty || null, person.major || null,
-        person.program || null, person.entryYear || null, person.isForeign ? 1 : 0,
-        person.staffId || null, person.position || null, person.department || null,
-        person.phone || null, person.email || null, person.address || null,
-        person.emergencyContact || null, person.profilePicture || null,
-        person.createdAt, person.updatedAt
+        id, person.type, person.fullName, person.nationalId || null, person.passportNo || null,
+        person.birthDate || null, person.gender || null, person.religion || null, person.sect || null,
+        person.address || null, person.city || null, person.country || null, person.phone || null,
+        person.email || null, person.studentNumber || null, person.faculty || null, person.program || null,
+        person.enrollmentYear || null, person.isForeign ? 1 : 0, person.employeeNumber || null,
+        person.department || null, person.position || null, person.facultyType || null, person.rank || null,
+        person.specialization || null, person.notes || null, person.attachments ? JSON.stringify(person.attachments) : null,
+        createdAt, updatedAt
       ]
     );
     this.save();
+    return id;
   }
 
   updatePerson(id: string, updates: Partial<Person>) {
@@ -300,10 +324,11 @@ class SQLiteDatabase {
     this.addPerson(updated);
   }
 
-  deletePerson(id: string) {
-    if (!this.db) return;
+  deletePerson(id: string): boolean {
+    if (!this.db) return false;
     this.db.run('DELETE FROM people WHERE id = ?', [id]);
     this.save();
+    return true;
   }
 
   // Cases
@@ -315,8 +340,8 @@ class SQLiteDatabase {
       const row = stmt.getAsObject() as any;
       cases.push({
         ...row,
-        personIds: row.personIds ? JSON.parse(row.personIds) : [],
-        attachmentIds: row.attachmentIds ? JSON.parse(row.attachmentIds) : [],
+        relatedPersons: row.relatedPersons ? JSON.parse(row.relatedPersons) : [],
+        attachments: row.attachments ? JSON.parse(row.attachments) : [],
       });
     }
     stmt.free();
@@ -332,25 +357,30 @@ class SQLiteDatabase {
       stmt.free();
       return {
         ...row,
-        personIds: row.personIds ? JSON.parse(row.personIds) : [],
-        attachmentIds: row.attachmentIds ? JSON.parse(row.attachmentIds) : [],
+        relatedPersons: row.relatedPersons ? JSON.parse(row.relatedPersons) : [],
+        attachments: row.attachments ? JSON.parse(row.attachments) : [],
       };
     }
     stmt.free();
     return undefined;
   }
 
-  addCase(caseData: Case) {
+  addCase(caseData: Omit<Case, 'id' | 'createdAt' | 'updatedAt'> & Partial<Pick<Case, 'id' | 'createdAt' | 'updatedAt'>>) {
     if (!this.db) return;
+    const id = caseData.id || crypto.randomUUID();
+    const createdAt = caseData.createdAt || new Date().toISOString();
+    const updatedAt = caseData.updatedAt || new Date().toISOString();
+    
     this.db.run(
-      'INSERT INTO cases VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO cases VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
-        caseData.id, caseData.title, caseData.status, caseData.summary || null,
-        JSON.stringify(caseData.personIds), JSON.stringify(caseData.attachmentIds),
-        caseData.createdAt, caseData.updatedAt
+        id, caseData.title, caseData.status, caseData.summary || null,
+        JSON.stringify(caseData.relatedPersons), JSON.stringify(caseData.attachments || []),
+        caseData.createdBy || null, createdAt, updatedAt
       ]
     );
     this.save();
+    return id;
   }
 
   updateCase(id: string, updates: Partial<Case>) {
@@ -360,7 +390,16 @@ class SQLiteDatabase {
 
     const updated = { ...caseData, ...updates, updatedAt: new Date().toISOString() };
     this.db.run('DELETE FROM cases WHERE id = ?', [id]);
-    this.addCase(updated);
+    
+    this.db.run(
+      'INSERT INTO cases VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        updated.id, updated.title, updated.status, updated.summary || null,
+        JSON.stringify(updated.relatedPersons), JSON.stringify(updated.attachments || []),
+        updated.createdBy || null, updated.createdAt, updated.updatedAt
+      ]
+    );
+    this.save();
   }
 
   deleteCase(id: string) {
@@ -394,13 +433,18 @@ class SQLiteDatabase {
     return undefined;
   }
 
-  addAttachment(attachment: Attachment) {
-    if (!this.db) return;
+  addAttachment(attachment: Omit<Attachment, 'id' | 'uploadedAt'> & Partial<Pick<Attachment, 'id' | 'uploadedAt'>>): Attachment {
+    if (!this.db) throw new Error('Database not initialized');
+    const id = attachment.id || crypto.randomUUID();
+    const uploadedAt = attachment.uploadedAt || new Date().toISOString();
+    
     this.db.run(
-      'INSERT INTO attachments VALUES (?, ?, ?, ?, ?, ?)',
-      [attachment.id, attachment.name, attachment.type, attachment.size, attachment.data, attachment.createdAt]
+      'INSERT INTO attachments VALUES (?, ?, ?, ?, ?)',
+      [id, attachment.fileName, attachment.fileType, attachment.fileData, uploadedAt]
     );
     this.save();
+    
+    return { id, fileName: attachment.fileName, fileType: attachment.fileType, fileData: attachment.fileData, uploadedAt };
   }
 
   // Incidents
@@ -412,8 +456,7 @@ class SQLiteDatabase {
       const row = stmt.getAsObject() as any;
       incidents.push({
         ...row,
-        personIds: row.personIds ? JSON.parse(row.personIds) : [],
-        attachmentIds: row.attachmentIds ? JSON.parse(row.attachmentIds) : [],
+        involvedPersons: row.involvedPersons ? JSON.parse(row.involvedPersons) : [],
         updates: row.updates ? JSON.parse(row.updates) : [],
       });
     }
@@ -430,8 +473,7 @@ class SQLiteDatabase {
       stmt.free();
       return {
         ...row,
-        personIds: row.personIds ? JSON.parse(row.personIds) : [],
-        attachmentIds: row.attachmentIds ? JSON.parse(row.attachmentIds) : [],
+        involvedPersons: row.involvedPersons ? JSON.parse(row.involvedPersons) : [],
         updates: row.updates ? JSON.parse(row.updates) : [],
       };
     }
@@ -439,18 +481,24 @@ class SQLiteDatabase {
     return undefined;
   }
 
-  addIncident(incident: Incident) {
+  addIncident(incident: Omit<Incident, 'id' | 'createdAt' | 'updatedAt' | 'updates'> & Partial<Pick<Incident, 'id' | 'createdAt' | 'updatedAt' | 'updates'>>) {
     if (!this.db) return;
+    const id = incident.id || crypto.randomUUID();
+    const createdAt = incident.createdAt || new Date().toISOString();
+    const updatedAt = incident.updatedAt || new Date().toISOString();
+    const updates = incident.updates || [];
+    
     this.db.run(
-      'INSERT INTO incidents VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO incidents VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
-        incident.id, incident.title, incident.type, incident.severity, incident.status,
-        incident.description, incident.location || null, JSON.stringify(incident.personIds),
-        JSON.stringify(incident.attachmentIds), JSON.stringify(incident.updates),
-        incident.createdAt, incident.updatedAt
+        id, incident.title, incident.date, incident.importance, incident.followUp || null,
+        incident.description, incident.recordsAndNotes || null, incident.securityOpinion || null,
+        JSON.stringify(incident.involvedPersons), incident.status, JSON.stringify(updates),
+        incident.createdBy || null, createdAt, updatedAt
       ]
     );
     this.save();
+    return id;
   }
 
   updateIncident(id: string, updates: Partial<Incident>) {
@@ -460,24 +508,52 @@ class SQLiteDatabase {
 
     const updated = { ...incident, ...updates, updatedAt: new Date().toISOString() };
     this.db.run('DELETE FROM incidents WHERE id = ?', [id]);
-    this.addIncident(updated);
+    
+    this.db.run(
+      'INSERT INTO incidents VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        updated.id, updated.title, updated.date, updated.importance, updated.followUp || null,
+        updated.description, updated.recordsAndNotes || null, updated.securityOpinion || null,
+        JSON.stringify(updated.involvedPersons), updated.status, JSON.stringify(updated.updates),
+        updated.createdBy || null, updated.createdAt, updated.updatedAt
+      ]
+    );
+    this.save();
   }
 
-  addIncidentUpdate(incidentId: string, update: IncidentUpdate) {
+  addIncidentUpdate(incidentId: string, updateText: string, userId: string) {
     if (!this.db) return;
     const incident = this.getIncidentById(incidentId);
     if (!incident) return;
 
-    incident.updates.push(update);
+    const newUpdate: IncidentUpdate = {
+      id: crypto.randomUUID(),
+      text: updateText,
+      createdBy: userId,
+      createdAt: new Date().toISOString(),
+    };
+
+    incident.updates.push(newUpdate);
     incident.updatedAt = new Date().toISOString();
     this.db.run('DELETE FROM incidents WHERE id = ?', [incidentId]);
-    this.addIncident(incident);
+    
+    this.db.run(
+      'INSERT INTO incidents VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        incident.id, incident.title, incident.date, incident.importance, incident.followUp || null,
+        incident.description, incident.recordsAndNotes || null, incident.securityOpinion || null,
+        JSON.stringify(incident.involvedPersons), incident.status, JSON.stringify(incident.updates),
+        incident.createdBy || null, incident.createdAt, incident.updatedAt
+      ]
+    );
+    this.save();
   }
 
-  deleteIncident(id: string) {
-    if (!this.db) return;
+  deleteIncident(id: string): boolean {
+    if (!this.db) return false;
     this.db.run('DELETE FROM incidents WHERE id = ?', [id]);
     this.save();
+    return true;
   }
 }
 

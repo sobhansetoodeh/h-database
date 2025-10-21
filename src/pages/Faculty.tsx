@@ -12,7 +12,7 @@ const Faculty: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   
-  const faculty = db.getPeople().filter(p => p.type === 'faculty-heyat' || p.type === 'faculty-haghtadris');
+  const faculty = sqliteDb.getPeople().filter(p => p.type === 'faculty-heyat' || p.type === 'faculty-haghtadris');
 
   const filteredFaculty = faculty.filter(person =>
     person.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -22,7 +22,7 @@ const Faculty: React.FC = () => {
 
   const handleDelete = (id: string) => {
     if (confirm('آیا از حذف این استاد اطمینان دارید؟')) {
-      if (db.deletePerson(id)) {
+      if (sqliteDb.deletePerson(id)) {
         toast({
           title: 'حذف موفق',
           description: 'استاد با موفقیت حذف شد',

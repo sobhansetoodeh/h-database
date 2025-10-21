@@ -15,8 +15,8 @@ const GlobalSearch: React.FC = () => {
     }
 
     const term = searchTerm.toLowerCase().trim();
-    const people = db.getPeople();
-    const cases = db.getCases();
+    const people = sqliteDb.getPeople();
+    const cases = sqliteDb.getCases();
 
     const matchedPeople = people.filter(person => {
       const searchableFields = [

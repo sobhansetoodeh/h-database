@@ -34,11 +34,11 @@ const IncidentForm: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showPersonSelector, setShowPersonSelector] = useState(false);
-  const people = db.getPeople();
+  const people = sqliteDb.getPeople();
 
   useEffect(() => {
     if (isEdit && id) {
-      const incident = db.getIncidentById(id);
+      const incident = sqliteDb.getIncidentById(id);
       if (incident) {
         setFormData({
           title: incident.title,
@@ -93,13 +93,13 @@ const IncidentForm: React.FC = () => {
     };
 
     if (isEdit && id) {
-      db.updateIncident(id, incidentData);
+      sqliteDb.updateIncident(id, incidentData);
       toast({
         title: 'ویرایش موفق',
         description: 'اطلاعات اتفاق با موفقیت ویرایش شد',
       });
     } else {
-      db.addIncident(incidentData);
+      sqliteDb.addIncident(incidentData);
       toast({
         title: 'ثبت موفق',
         description: 'اتفاق با موفقیت ثبت شد',

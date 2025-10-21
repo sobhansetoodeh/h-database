@@ -12,7 +12,7 @@ const Staff: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   
-  const staff = db.getPeople().filter(p => p.type === 'staff');
+  const staff = sqliteDb.getPeople().filter(p => p.type === 'staff');
 
   const filteredStaff = staff.filter(person =>
     person.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -22,7 +22,7 @@ const Staff: React.FC = () => {
 
   const handleDelete = (id: string) => {
     if (confirm('آیا از حذف این کارمند اطمینان دارید؟')) {
-      if (db.deletePerson(id)) {
+      if (sqliteDb.deletePerson(id)) {
         toast({
           title: 'حذف موفق',
           description: 'کارمند با موفقیت حذف شد',

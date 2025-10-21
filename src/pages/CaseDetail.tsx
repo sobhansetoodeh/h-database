@@ -39,8 +39,8 @@ const CaseDetail: React.FC = () => {
     }
   };
 
-  const relatedPeople = caseData.personIds.map(personId => sqliteDb.getPersonById(personId)).filter(Boolean);
-  const attachments = caseData.attachmentIds?.map(attId => sqliteDb.getAttachmentById(attId)).filter(Boolean) || [];
+  const relatedPeople = caseData.relatedPersons.map(personId => sqliteDb.getPersonById(personId)).filter(Boolean);
+  const attachments = caseData.attachments?.map(attId => sqliteDb.getAttachmentById(attId)).filter(Boolean) || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {

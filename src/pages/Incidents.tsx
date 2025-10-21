@@ -14,7 +14,7 @@ const Incidents: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   
-  const incidents = db.getIncidents();
+  const incidents = sqliteDb.getIncidents();
 
   const filteredIncidents = incidents.filter(incident =>
     incident.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -23,7 +23,7 @@ const Incidents: React.FC = () => {
 
   const handleDelete = (id: string) => {
     if (confirm('آیا از حذف این اتفاق اطمینان دارید؟')) {
-      if (db.deleteIncident(id)) {
+      if (sqliteDb.deleteIncident(id)) {
         toast({
           title: 'حذف موفق',
           description: 'اتفاق با موفقیت حذف شد',

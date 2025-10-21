@@ -13,7 +13,7 @@ const PersonDetail: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const person = id ? db.getPersonById(id) : null;
+  const person = id ? sqliteDb.getPersonById(id) : null;
 
   if (!person) {
     return (
@@ -52,7 +52,7 @@ const PersonDetail: React.FC = () => {
 
   const handleDelete = () => {
     if (confirm('آیا از حذف این فرد اطمینان دارید؟')) {
-      if (db.deletePerson(id!)) {
+      if (sqliteDb.deletePerson(id!)) {
         toast({
           title: 'حذف موفق',
           description: 'فرد با موفقیت حذف شد',
@@ -63,14 +63,14 @@ const PersonDetail: React.FC = () => {
   };
 
   const profilePic = person.attachments?.find(a => {
-    const attachment = db.getAttachmentById(a);
+    const attachment = sqliteDb.getAttachmentById(a);
     return attachment?.fileType.startsWith('image/') && attachment?.fileName.includes('profile');
   });
 
-  const profileImage = profilePic ? db.getAttachmentById(profilePic) : null;
+  const profileImage = profilePic ? sqliteDb.getAttachmentById(profilePic) : null;
 
   const documents = person.attachments?.filter(a => {
-    const attachment = db.getAttachmentById(a);
+    const attachment = sqliteDb.getAttachmentById(a);
     return attachment && attachment.id !== profilePic;
   }) || [];
 
@@ -275,7 +275,7 @@ const PersonDetail: React.FC = () => {
           <h2 className="text-xl font-bold mb-4">مدارک و پیوست‌ها</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {documents.map((attachmentId) => {
-              const attachment = db.getAttachmentById(attachmentId);
+              const attachment = sqliteDb.getAttachmentById(attachmentId);
               if (!attachment) return null;
               
               const isImage = attachment.fileType.startsWith('image/');
