@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, Briefcase, GraduationCap, FileText, Moon, Sun, ChevronRight, Search, AlertTriangle, Settings } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { Home, Users, Briefcase, GraduationCap, FileText, Moon, Sun, ChevronRight, Search, AlertTriangle, Settings, Shield, ScrollText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
@@ -24,6 +26,7 @@ const menuItems = [
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { isAdmin } = useAuth();
 
   return (
     <div
@@ -83,6 +86,43 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               </Link>
             );
           })}
+
+          {isAdmin && (
+            <>
+              <Separator className="my-4" />
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground px-3 mb-2">
+                  مدیریت سیستم
+                </p>
+                <Link to="/users">
+                  <div
+                    className={cn(
+                      'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
+                      location.pathname === '/users'
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
+                    )}
+                  >
+                    <Shield className="w-5 h-5 flex-shrink-0" />
+                    {isOpen && <span className="text-sm font-medium">مدیریت کاربران</span>}
+                  </div>
+                </Link>
+                <Link to="/audit-log">
+                  <div
+                    className={cn(
+                      'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
+                      location.pathname === '/audit-log'
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
+                    )}
+                  >
+                    <ScrollText className="w-5 h-5 flex-shrink-0" />
+                    {isOpen && <span className="text-sm font-medium">گزارش فعالیت‌ها</span>}
+                  </div>
+                </Link>
+              </div>
+            </>
+          )}
         </nav>
 
         {/* Footer */}

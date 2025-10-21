@@ -2,17 +2,22 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { sqliteDb, HerasatUser } from '@/lib/sqlite-db';
 
+interface AuthUser extends HerasatUser {
+  roles: string[];
+}
+
 interface AuthContextType {
-  user: HerasatUser | null;
+  user: AuthUser | null;
   login: (username: string, password: string) => boolean;
   logout: () => void;
   isAuthenticated: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<HerasatUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
     const initDb = async () => {
@@ -41,7 +46,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      logout, 
+      isAuthenticated: !!user,
+      isAdmin: user?.roles?.includes('admin') || false
+    }}>
       {children}
     </AuthContext.Provider>
   );

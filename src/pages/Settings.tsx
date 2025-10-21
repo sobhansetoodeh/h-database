@@ -102,7 +102,7 @@ const Settings: React.FC = () => {
           </div>
           <div>
             <span className="font-medium text-muted-foreground">نقش: </span>
-            <span>{user?.role}</span>
+            <span>{user?.roles?.includes('admin') ? 'مدیر' : 'کاربر'}</span>
           </div>
         </div>
       </Card>

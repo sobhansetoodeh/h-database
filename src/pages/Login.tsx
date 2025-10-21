@@ -75,8 +75,7 @@ const Login: React.FC = () => {
         </form>
 
         <div className="text-center text-xs text-muted-foreground pt-4 border-t">
-          <p>نام کاربری پیش‌فرض: admin</p>
-          <p>رمز عبور پیش‌فرض: admin123</p>
+          <p>برای دسترسی به سیستم با اطلاعات کاربری خود وارد شوید</p>
         </div>
       </Card>
     </div>

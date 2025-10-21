@@ -1,12 +1,29 @@
 import initSqlJs, { Database } from 'sql.js';
+import bcrypt from 'bcryptjs';
 
 export interface HerasatUser {
   id: string;
   username: string;
-  password: string;
+  passwordHash: string;
   fullName: string;
+  createdAt: string;
+}
+
+export interface UserRole {
+  id: string;
+  userId: string;
   role: 'admin' | 'user';
   createdAt: string;
+}
+
+export interface AuditLog {
+  id: string;
+  userId: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  details?: string;
+  timestamp: string;
 }
 
 export interface Person {
@@ -121,10 +138,27 @@ class SQLiteDatabase {
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
+        passwordHash TEXT NOT NULL,
         fullName TEXT NOT NULL,
-        role TEXT NOT NULL,
         createdAt TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS user_roles (
+        id TEXT PRIMARY KEY,
+        userId TEXT NOT NULL,
+        role TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        id TEXT PRIMARY KEY,
+        userId TEXT NOT NULL,
+        action TEXT NOT NULL,
+        entityType TEXT NOT NULL,
+        entityId TEXT NOT NULL,
+        details TEXT,
+        timestamp TEXT NOT NULL
       );
 
       CREATE TABLE IF NOT EXISTS people (
@@ -221,15 +255,41 @@ class SQLiteDatabase {
   private initializeDefaultAdmin() {
     const users = this.getHerasatUsers();
     if (users.length === 0) {
-      this.addHerasatUser({
-        id: '1',
-        username: 'admin',
-        password: 'admin123',
-        fullName: 'مدیر سیستم',
-        role: 'admin',
-        createdAt: new Date().toISOString(),
-      });
+      const userId = '1';
+      const passwordHash = bcrypt.hashSync('admin123', 10);
+      this.db!.run(
+        'INSERT INTO users VALUES (?, ?, ?, ?, ?)',
+        [userId, 'admin', passwordHash, 'مدیر سیستم', new Date().toISOString()]
+      );
+      this.db!.run(
+        'INSERT INTO user_roles VALUES (?, ?, ?, ?)',
+        [crypto.randomUUID(), userId, 'admin', new Date().toISOString()]
+      );
+      this.save();
     }
+  }
+
+  // Audit Logs
+  addAuditLog(log: Omit<AuditLog, 'id' | 'timestamp'>) {
+    if (!this.db) return;
+    const id = crypto.randomUUID();
+    const timestamp = new Date().toISOString();
+    this.db.run(
+      'INSERT INTO audit_logs VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [id, log.userId, log.action, log.entityType, log.entityId, log.details || null, timestamp]
+    );
+    this.save();
+  }
+
+  getAuditLogs(): AuditLog[] {
+    if (!this.db) return [];
+    const stmt = this.db.prepare('SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT 1000');
+    const logs: AuditLog[] = [];
+    while (stmt.step()) {
+      logs.push(stmt.getAsObject() as any);
+    }
+    stmt.free();
+    return logs;
   }
 
   // Users
@@ -244,23 +304,119 @@ class SQLiteDatabase {
     return users;
   }
 
-  addHerasatUser(user: HerasatUser) {
-    if (!this.db) return;
-    this.db.run(
-      'INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)',
-      [user.id, user.username, user.password, user.fullName, user.role, user.createdAt]
-    );
-    this.save();
-  }
-
-  authenticateHerasatUser(username: string, password: string): HerasatUser | null {
-    if (!this.db) return null;
-    const stmt = this.db.prepare('SELECT * FROM users WHERE username = ? AND password = ?');
-    stmt.bind([username, password]);
+  getUserById(id: string): HerasatUser | undefined {
+    if (!this.db) return undefined;
+    const stmt = this.db.prepare('SELECT * FROM users WHERE id = ?');
+    stmt.bind([id]);
     if (stmt.step()) {
       const user = stmt.getAsObject() as any;
       stmt.free();
       return user;
+    }
+    stmt.free();
+    return undefined;
+  }
+
+  addHerasatUser(username: string, password: string, fullName: string, role: 'admin' | 'user', createdByUserId: string) {
+    if (!this.db) return;
+    const userId = crypto.randomUUID();
+    const passwordHash = bcrypt.hashSync(password, 10);
+    const createdAt = new Date().toISOString();
+    
+    this.db.run(
+      'INSERT INTO users VALUES (?, ?, ?, ?, ?)',
+      [userId, username, passwordHash, fullName, createdAt]
+    );
+    
+    this.db.run(
+      'INSERT INTO user_roles VALUES (?, ?, ?, ?)',
+      [crypto.randomUUID(), userId, role, createdAt]
+    );
+    
+    this.addAuditLog({
+      userId: createdByUserId,
+      action: 'CREATE_USER',
+      entityType: 'user',
+      entityId: userId,
+      details: `Created user: ${username} with role: ${role}`
+    });
+    
+    this.save();
+    return userId;
+  }
+
+  updateUserPassword(userId: string, newPassword: string, changedByUserId: string) {
+    if (!this.db) return;
+    const passwordHash = bcrypt.hashSync(newPassword, 10);
+    
+    this.db.run('UPDATE users SET passwordHash = ? WHERE id = ?', [passwordHash, userId]);
+    
+    this.addAuditLog({
+      userId: changedByUserId,
+      action: 'UPDATE_PASSWORD',
+      entityType: 'user',
+      entityId: userId,
+      details: 'Password updated'
+    });
+    
+    this.save();
+  }
+
+  deleteHerasatUser(userId: string, deletedByUserId: string) {
+    if (!this.db) return;
+    const user = this.getUserById(userId);
+    
+    this.db.run('DELETE FROM user_roles WHERE userId = ?', [userId]);
+    this.db.run('DELETE FROM users WHERE id = ?', [userId]);
+    
+    this.addAuditLog({
+      userId: deletedByUserId,
+      action: 'DELETE_USER',
+      entityType: 'user',
+      entityId: userId,
+      details: `Deleted user: ${user?.username}`
+    });
+    
+    this.save();
+  }
+
+  getUserRoles(userId: string): string[] {
+    if (!this.db) return [];
+    const stmt = this.db.prepare('SELECT role FROM user_roles WHERE userId = ?');
+    stmt.bind([userId]);
+    const roles: string[] = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject() as any;
+      roles.push(row.role);
+    }
+    stmt.free();
+    return roles;
+  }
+
+  hasRole(userId: string, role: 'admin' | 'user'): boolean {
+    const roles = this.getUserRoles(userId);
+    return roles.includes(role);
+  }
+
+  authenticateHerasatUser(username: string, password: string): (HerasatUser & { roles: string[] }) | null {
+    if (!this.db) return null;
+    const stmt = this.db.prepare('SELECT * FROM users WHERE username = ?');
+    stmt.bind([username]);
+    if (stmt.step()) {
+      const user = stmt.getAsObject() as any;
+      stmt.free();
+      
+      if (bcrypt.compareSync(password, user.passwordHash)) {
+        const roles = this.getUserRoles(user.id);
+        this.addAuditLog({
+          userId: user.id,
+          action: 'LOGIN',
+          entityType: 'auth',
+          entityId: user.id,
+          details: 'User logged in'
+        });
+        return { ...user, roles };
+      }
     }
     stmt.free();
     return null;
@@ -291,7 +447,7 @@ class SQLiteDatabase {
     return undefined;
   }
 
-  addPerson(person: Omit<Person, 'id' | 'createdAt' | 'updatedAt'> & Partial<Pick<Person, 'id' | 'createdAt' | 'updatedAt'>>) {
+  addPerson(person: Omit<Person, 'id' | 'createdAt' | 'updatedAt'> & Partial<Pick<Person, 'id' | 'createdAt' | 'updatedAt'>>, userId?: string) {
     if (!this.db) return;
     const id = person.id || crypto.randomUUID();
     const createdAt = person.createdAt || new Date().toISOString();
@@ -310,11 +466,22 @@ class SQLiteDatabase {
         createdAt, updatedAt
       ]
     );
+    
+    if (userId) {
+      this.addAuditLog({
+        userId,
+        action: 'CREATE',
+        entityType: person.type,
+        entityId: id,
+        details: `Created ${person.type}: ${person.fullName}`
+      });
+    }
+    
     this.save();
     return id;
   }
 
-  updatePerson(id: string, updates: Partial<Person>) {
+  updatePerson(id: string, updates: Partial<Person>, userId?: string) {
     if (!this.db) return;
     const person = this.getPersonById(id);
     if (!person) return;
@@ -322,11 +489,34 @@ class SQLiteDatabase {
     const updated = { ...person, ...updates, updatedAt: new Date().toISOString() };
     this.db.run('DELETE FROM people WHERE id = ?', [id]);
     this.addPerson(updated);
+    
+    if (userId) {
+      this.addAuditLog({
+        userId,
+        action: 'UPDATE',
+        entityType: person.type,
+        entityId: id,
+        details: `Updated ${person.type}: ${person.fullName}`
+      });
+    }
   }
 
-  deletePerson(id: string): boolean {
+  deletePerson(id: string, userId?: string): boolean {
     if (!this.db) return false;
+    const person = this.getPersonById(id);
+    
     this.db.run('DELETE FROM people WHERE id = ?', [id]);
+    
+    if (userId && person) {
+      this.addAuditLog({
+        userId,
+        action: 'DELETE',
+        entityType: person.type,
+        entityId: id,
+        details: `Deleted ${person.type}: ${person.fullName}`
+      });
+    }
+    
     this.save();
     return true;
   }
@@ -365,7 +555,7 @@ class SQLiteDatabase {
     return undefined;
   }
 
-  addCase(caseData: Omit<Case, 'id' | 'createdAt' | 'updatedAt'> & Partial<Pick<Case, 'id' | 'createdAt' | 'updatedAt'>>) {
+  addCase(caseData: Omit<Case, 'id' | 'createdAt' | 'updatedAt'> & Partial<Pick<Case, 'id' | 'createdAt' | 'updatedAt'>>, userId?: string) {
     if (!this.db) return;
     const id = caseData.id || crypto.randomUUID();
     const createdAt = caseData.createdAt || new Date().toISOString();
@@ -379,11 +569,22 @@ class SQLiteDatabase {
         caseData.createdBy || null, createdAt, updatedAt
       ]
     );
+    
+    if (userId) {
+      this.addAuditLog({
+        userId,
+        action: 'CREATE',
+        entityType: 'case',
+        entityId: id,
+        details: `Created case: ${caseData.title}`
+      });
+    }
+    
     this.save();
     return id;
   }
 
-  updateCase(id: string, updates: Partial<Case>) {
+  updateCase(id: string, updates: Partial<Case>, userId?: string) {
     if (!this.db) return;
     const caseData = this.getCaseById(id);
     if (!caseData) return;
@@ -399,12 +600,36 @@ class SQLiteDatabase {
         updated.createdBy || null, updated.createdAt, updated.updatedAt
       ]
     );
+    
+    if (userId) {
+      this.addAuditLog({
+        userId,
+        action: 'UPDATE',
+        entityType: 'case',
+        entityId: id,
+        details: `Updated case: ${updated.title}`
+      });
+    }
+    
     this.save();
   }
 
-  deleteCase(id: string) {
+  deleteCase(id: string, userId?: string) {
     if (!this.db) return;
+    const caseData = this.getCaseById(id);
+    
     this.db.run('DELETE FROM cases WHERE id = ?', [id]);
+    
+    if (userId && caseData) {
+      this.addAuditLog({
+        userId,
+        action: 'DELETE',
+        entityType: 'case',
+        entityId: id,
+        details: `Deleted case: ${caseData.title}`
+      });
+    }
+    
     this.save();
   }
 
@@ -481,7 +706,7 @@ class SQLiteDatabase {
     return undefined;
   }
 
-  addIncident(incident: Omit<Incident, 'id' | 'createdAt' | 'updatedAt' | 'updates'> & Partial<Pick<Incident, 'id' | 'createdAt' | 'updatedAt' | 'updates'>>) {
+  addIncident(incident: Omit<Incident, 'id' | 'createdAt' | 'updatedAt' | 'updates'> & Partial<Pick<Incident, 'id' | 'createdAt' | 'updatedAt' | 'updates'>>, userId?: string) {
     if (!this.db) return;
     const id = incident.id || crypto.randomUUID();
     const createdAt = incident.createdAt || new Date().toISOString();
@@ -497,11 +722,22 @@ class SQLiteDatabase {
         incident.createdBy || null, createdAt, updatedAt
       ]
     );
+    
+    if (userId) {
+      this.addAuditLog({
+        userId,
+        action: 'CREATE',
+        entityType: 'incident',
+        entityId: id,
+        details: `Created incident: ${incident.title}`
+      });
+    }
+    
     this.save();
     return id;
   }
 
-  updateIncident(id: string, updates: Partial<Incident>) {
+  updateIncident(id: string, updates: Partial<Incident>, userId?: string) {
     if (!this.db) return;
     const incident = this.getIncidentById(id);
     if (!incident) return;
@@ -518,6 +754,17 @@ class SQLiteDatabase {
         updated.createdBy || null, updated.createdAt, updated.updatedAt
       ]
     );
+    
+    if (userId) {
+      this.addAuditLog({
+        userId,
+        action: 'UPDATE',
+        entityType: 'incident',
+        entityId: id,
+        details: `Updated incident: ${updated.title}`
+      });
+    }
+    
     this.save();
   }
 
@@ -546,12 +793,34 @@ class SQLiteDatabase {
         incident.createdBy || null, incident.createdAt, incident.updatedAt
       ]
     );
+    
+    this.addAuditLog({
+      userId,
+      action: 'ADD_UPDATE',
+      entityType: 'incident',
+      entityId: incidentId,
+      details: `Added update to incident: ${incident.title}`
+    });
+    
     this.save();
   }
 
-  deleteIncident(id: string): boolean {
+  deleteIncident(id: string, userId?: string): boolean {
     if (!this.db) return false;
+    const incident = this.getIncidentById(id);
+    
     this.db.run('DELETE FROM incidents WHERE id = ?', [id]);
+    
+    if (userId && incident) {
+      this.addAuditLog({
+        userId,
+        action: 'DELETE',
+        entityType: 'incident',
+        entityId: id,
+        details: `Deleted incident: ${incident.title}`
+      });
+    }
+    
     this.save();
     return true;
   }

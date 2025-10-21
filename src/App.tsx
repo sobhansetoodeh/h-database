@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Sidebar } from "@/components/Layout/Sidebar";
 import { Header } from "@/components/Layout/Header";
+import UserManagement from "./pages/UserManagement";
+import AuditLog from "./pages/AuditLog";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import GlobalSearch from "./pages/GlobalSearch";
@@ -242,6 +244,22 @@ const AppRoutes = () => {
         element={
           <ProtectedLayout>
             <Settings />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/users"
+        element={
+          <ProtectedLayout>
+            <UserManagement />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/audit-log"
+        element={
+          <ProtectedLayout>
+            <AuditLog />
           </ProtectedLayout>
         }
       />
