@@ -14,16 +14,394 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      attachments: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          size: number | null
+          type: string
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          size?: number | null
+          type: string
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          size?: number | null
+          type?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      case_attachments: {
+        Row: {
+          attachment_id: string
+          case_id: string
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          attachment_id: string
+          case_id: string
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          attachment_id?: string
+          case_id?: string
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_attachments_attachment_id_fkey"
+            columns: ["attachment_id"]
+            isOneToOne: false
+            referencedRelation: "attachments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_attachments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_people: {
+        Row: {
+          case_id: string
+          created_at: string | null
+          id: string
+          person_id: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string | null
+          id?: string
+          person_id: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string | null
+          id?: string
+          person_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_people_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_people_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cases: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          status: Database["public"]["Enums"]["case_status"] | null
+          summary: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["case_status"] | null
+          summary?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["case_status"] | null
+          summary?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      incident_people: {
+        Row: {
+          created_at: string | null
+          id: string
+          incident_id: string
+          person_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          incident_id: string
+          person_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          incident_id?: string
+          person_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_people_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_people_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incidents: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          date: string
+          description: string | null
+          follow_up: string | null
+          id: string
+          importance: Database["public"]["Enums"]["incident_importance"] | null
+          records: string | null
+          security_opinion: string | null
+          status: Database["public"]["Enums"]["incident_status"] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          date: string
+          description?: string | null
+          follow_up?: string | null
+          id?: string
+          importance?: Database["public"]["Enums"]["incident_importance"] | null
+          records?: string | null
+          security_opinion?: string | null
+          status?: Database["public"]["Enums"]["incident_status"] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          description?: string | null
+          follow_up?: string | null
+          id?: string
+          importance?: Database["public"]["Enums"]["incident_importance"] | null
+          records?: string | null
+          security_opinion?: string | null
+          status?: Database["public"]["Enums"]["incident_status"] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      people: {
+        Row: {
+          academic_rank: string | null
+          address: string | null
+          city: string | null
+          country: string | null
+          created_at: string | null
+          created_by: string | null
+          department: string | null
+          email: string | null
+          employee_number: string | null
+          faculty: string | null
+          full_name: string
+          id: string
+          is_foreign_student: boolean | null
+          national_id: string | null
+          notes: string | null
+          phone: string | null
+          position: string | null
+          program: string | null
+          religion: string | null
+          student_number: string | null
+          type: Database["public"]["Enums"]["person_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          academic_rank?: string | null
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          department?: string | null
+          email?: string | null
+          employee_number?: string | null
+          faculty?: string | null
+          full_name: string
+          id?: string
+          is_foreign_student?: boolean | null
+          national_id?: string | null
+          notes?: string | null
+          phone?: string | null
+          position?: string | null
+          program?: string | null
+          religion?: string | null
+          student_number?: string | null
+          type: Database["public"]["Enums"]["person_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          academic_rank?: string | null
+          address?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          department?: string | null
+          email?: string | null
+          employee_number?: string | null
+          faculty?: string | null
+          full_name?: string
+          id?: string
+          is_foreign_student?: boolean | null
+          national_id?: string | null
+          notes?: string | null
+          phone?: string | null
+          position?: string | null
+          program?: string | null
+          religion?: string | null
+          student_number?: string | null
+          type?: Database["public"]["Enums"]["person_type"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      people_attachments: {
+        Row: {
+          attachment_id: string
+          created_at: string | null
+          id: string
+          is_profile_picture: boolean | null
+          person_id: string
+        }
+        Insert: {
+          attachment_id: string
+          created_at?: string | null
+          id?: string
+          is_profile_picture?: boolean | null
+          person_id: string
+        }
+        Update: {
+          attachment_id?: string
+          created_at?: string | null
+          id?: string
+          is_profile_picture?: boolean | null
+          person_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "people_attachments_attachment_id_fkey"
+            columns: ["attachment_id"]
+            isOneToOne: false
+            referencedRelation: "attachments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "people_attachments_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      case_status: "open" | "in_progress" | "closed"
+      incident_importance: "low" | "medium" | "high" | "critical"
+      incident_status: "pending" | "under_review" | "resolved"
+      person_type: "student" | "staff" | "faculty"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +528,12 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      case_status: ["open", "in_progress", "closed"],
+      incident_importance: ["low", "medium", "high", "critical"],
+      incident_status: ["pending", "under_review", "resolved"],
+      person_type: ["student", "staff", "faculty"],
+    },
   },
 } as const
