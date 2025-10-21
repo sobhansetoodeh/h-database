@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { db } from '@/lib/db';
+import { sqliteDb } from '@/lib/sqlite-db';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
@@ -12,7 +12,7 @@ const Cases: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   
-  const cases = db.getCases();
+  const cases = sqliteDb.getCases();
 
   const filteredCases = cases.filter(caseItem =>
     caseItem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -21,13 +21,12 @@ const Cases: React.FC = () => {
 
   const handleDelete = (id: string) => {
     if (confirm('آیا از حذف این پرونده اطمینان دارید؟')) {
-      if (db.deleteCase(id)) {
-        toast({
-          title: 'حذف موفق',
-          description: 'پرونده با موفقیت حذف شد',
-        });
-        window.location.reload();
-      }
+      sqliteDb.deleteCase(id);
+      toast({
+        title: 'حذف موفق',
+        description: 'پرونده با موفقیت حذف شد',
+      });
+      window.location.reload();
     }
   };
 
@@ -74,14 +73,14 @@ const Cases: React.FC = () => {
                     <h3 className="font-bold text-lg">{caseItem.title}</h3>
                     <span
                       className={`text-xs px-2 py-1 rounded ${
-                        caseItem.status === 'باز'
+                        caseItem.status === 'active'
                           ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                          : caseItem.status === 'بسته'
+                          : caseItem.status === 'closed'
                           ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
                           : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
                       }`}
                     >
-                      {caseItem.status}
+                      {caseItem.status === 'active' ? 'فعال' : caseItem.status === 'closed' ? 'بسته' : 'در انتظار'}
                     </span>
                   </div>
                   {caseItem.summary && (
@@ -90,7 +89,7 @@ const Cases: React.FC = () => {
                     </p>
                   )}
                   <div className="mt-2 text-xs text-muted-foreground">
-                    افراد مرتبط: {toPersianNumber(caseItem.relatedPersons.length)} نفر
+                    افراد مرتبط: {toPersianNumber(caseItem.personIds.length)} نفر
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

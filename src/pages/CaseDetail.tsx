@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { db } from '@/lib/db';
+import { sqliteDb } from '@/lib/sqlite-db';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Edit, Trash2, User, FileText } from 'lucide-react';
@@ -13,7 +13,7 @@ const CaseDetail: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const caseData = id ? db.getCaseById(id) : null;
+  const caseData = id ? sqliteDb.getCaseById(id) : null;
 
   if (!caseData) {
     return (
@@ -30,18 +30,17 @@ const CaseDetail: React.FC = () => {
 
   const handleDelete = () => {
     if (confirm('آیا از حذف این پرونده اطمینان دارید؟')) {
-      if (db.deleteCase(id!)) {
-        toast({
-          title: 'حذف موفق',
-          description: 'پرونده با موفقیت حذف شد',
-        });
-        navigate('/cases');
-      }
+      sqliteDb.deleteCase(id!);
+      toast({
+        title: 'حذف موفق',
+        description: 'پرونده با موفقیت حذف شد',
+      });
+      navigate('/cases');
     }
   };
 
-  const relatedPeople = caseData.relatedPersons.map(personId => db.getPersonById(personId)).filter(Boolean);
-  const attachments = caseData.attachments?.map(attId => db.getAttachmentById(attId)).filter(Boolean) || [];
+  const relatedPeople = caseData.personIds.map(personId => sqliteDb.getPersonById(personId)).filter(Boolean);
+  const attachments = caseData.attachmentIds?.map(attId => sqliteDb.getAttachmentById(attId)).filter(Boolean) || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {

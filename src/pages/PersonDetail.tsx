@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { db } from '@/lib/db';
+import { sqliteDb } from '@/lib/sqlite-db';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Edit, Trash2, User, FileText, Image as ImageIcon } from 'lucide-react';

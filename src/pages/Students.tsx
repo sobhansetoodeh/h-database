@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { db, Person } from '@/lib/db';
+import { sqliteDb, Person } from '@/lib/sqlite-db';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
@@ -12,7 +12,7 @@ const Students: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   
-  const students = db.getPeople().filter(p => p.type === 'student');
+  const students = sqliteDb.getPeople().filter(p => p.type === 'student');
 
   const filteredStudents = students.filter(student =>
     student.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -22,13 +22,12 @@ const Students: React.FC = () => {
 
   const handleDelete = (id: string) => {
     if (confirm('آیا از حذف این دانشجو اطمینان دارید؟')) {
-      if (db.deletePerson(id)) {
-        toast({
-          title: 'حذف موفق',
-          description: 'دانشجو با موفقیت حذف شد',
-        });
-        window.location.reload();
-      }
+      sqliteDb.deletePerson(id);
+      toast({
+        title: 'حذف موفق',
+        description: 'دانشجو با موفقیت حذف شد',
+      });
+      window.location.reload();
     }
   };
 

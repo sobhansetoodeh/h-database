@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { db } from '@/lib/db';
+import { sqliteDb } from '@/lib/sqlite-db';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Edit, Trash2, Eye, AlertTriangle, AlertCircle, Info } from 'lucide-react';

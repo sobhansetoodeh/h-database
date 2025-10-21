@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { db, HerasatUser } from '@/lib/db';
+import { sqliteDb, HerasatUser } from '@/lib/sqlite-db';
 
 interface AuthContextType {
   user: HerasatUser | null;
@@ -15,15 +15,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<HerasatUser | null>(null);
 
   useEffect(() => {
-    db.initializeDefaultAdmin();
-    const savedUser = localStorage.getItem('herasat_current_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    const initDb = async () => {
+      await sqliteDb.initialize();
+      const savedUser = localStorage.getItem('herasat_current_user');
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    };
+    initDb();
   }, []);
 
   const login = (username: string, password: string): boolean => {
-    const authenticatedUser = db.authenticateHerasatUser(username, password);
+    const authenticatedUser = sqliteDb.authenticateHerasatUser(username, password);
     if (authenticatedUser) {
       setUser(authenticatedUser);
       localStorage.setItem('herasat_current_user', JSON.stringify(authenticatedUser));

@@ -1,20 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Users, Briefcase, GraduationCap, FileText } from 'lucide-react';
-import { db } from '@/lib/db';
+import { sqliteDb } from '@/lib/sqlite-db';
 import { toPersianNumber } from '@/lib/persian-utils';
 import { Link } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
-  const people = db.getPeople();
-  const cases = db.getCases();
+  const people = sqliteDb.getPeople();
+  const cases = sqliteDb.getCases();
 
   const stats = {
     students: people.filter(p => p.type === 'student').length,
     staff: people.filter(p => p.type === 'staff').length,
     faculty: people.filter(p => p.type.startsWith('faculty')).length,
     cases: cases.length,
-    openCases: cases.filter(c => c.status === 'باز').length,
+    openCases: cases.filter(c => c.status === 'active').length,
   };
 
   const statCards = [
@@ -94,14 +94,14 @@ const Dashboard: React.FC = () => {
                       <span className="font-medium">{caseItem.title}</span>
                       <span
                         className={`text-xs px-2 py-1 rounded ${
-                          caseItem.status === 'باز'
+                          caseItem.status === 'active'
                             ? 'bg-green-100 text-green-700'
-                            : caseItem.status === 'بسته'
+                            : caseItem.status === 'closed'
                             ? 'bg-gray-100 text-gray-700'
                             : 'bg-yellow-100 text-yellow-700'
                         }`}
                       >
-                        {caseItem.status}
+                        {caseItem.status === 'active' ? 'فعال' : caseItem.status === 'closed' ? 'بسته' : 'در انتظار'}
                       </span>
                     </div>
                     {caseItem.summary && (
@@ -128,13 +128,13 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
               <span>پرونده‌های بسته</span>
               <span className="font-bold">
-                {toPersianNumber(cases.filter(c => c.status === 'بسته').length)}
+                {toPersianNumber(cases.filter(c => c.status === 'closed').length)}
               </span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-50 dark:bg-yellow-950">
-              <span>در حال بررسی</span>
+              <span>در انتظار</span>
               <span className="font-bold text-yellow-600">
-                {toPersianNumber(cases.filter(c => c.status === 'در حال بررسی').length)}
+                {toPersianNumber(cases.filter(c => c.status === 'pending').length)}
               </span>
             </div>
           </div>

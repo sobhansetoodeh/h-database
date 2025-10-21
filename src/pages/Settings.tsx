@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Download, Upload, Key, Database } from 'lucide-react';
+import { sqliteDb } from '@/lib/sqlite-db';
 
 const Settings: React.FC = () => {
   const { user } = useAuth();
@@ -38,56 +39,46 @@ const Settings: React.FC = () => {
   };
 
   const handleExportData = () => {
-    const data = {
-      people: localStorage.getItem('people'),
-      cases: localStorage.getItem('cases'),
-      incidents: localStorage.getItem('incidents'),
-      attachments: localStorage.getItem('attachments'),
-      herasat_users: localStorage.getItem('herasat_users'),
-    };
+    try {
+      const blob = sqliteDb.exportDatabase();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `herasat-${new Date().toISOString().split('T')[0]}.db`;
+      a.click();
+      URL.revokeObjectURL(url);
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `herasat-backup-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    toast({
-      title: 'موفقیت',
-      description: 'پشتیبان گیری با موفقیت انجام شد',
-    });
+      toast({
+        title: 'موفقیت',
+        description: 'فایل دیتابیس با موفقیت دانلود شد',
+      });
+    } catch (error) {
+      toast({
+        title: 'خطا',
+        description: 'خطا در ایجاد فایل پشتیبان',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleImportData = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportData = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = JSON.parse(event.target?.result as string);
-        
-        Object.keys(data).forEach(key => {
-          if (data[key]) {
-            localStorage.setItem(key, data[key]);
-          }
-        });
-
-        toast({
-          title: 'موفقیت',
-          description: 'بازیابی اطلاعات با موفقیت انجام شد. صفحه را رفرش کنید.',
-        });
-      } catch (error) {
-        toast({
-          title: 'خطا',
-          description: 'فایل معتبر نیست',
-          variant: 'destructive',
-        });
-      }
-    };
-    reader.readAsText(file);
+    try {
+      await sqliteDb.importDatabase(file);
+      toast({
+        title: 'موفقیت',
+        description: 'دیتابیس با موفقیت بازیابی شد. صفحه را رفرش کنید.',
+      });
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (error) {
+      toast({
+        title: 'خطا',
+        description: 'فایل دیتابیس معتبر نیست',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -165,8 +156,8 @@ const Settings: React.FC = () => {
           <div className="p-4 bg-muted rounded-lg">
             <h3 className="font-semibold mb-2">محل ذخیره‌سازی</h3>
             <p className="text-sm text-muted-foreground">
-              تمام اطلاعات در Local Storage مرورگر شما ذخیره می‌شود.
-              برای پشتیبان‌گیری و انتقال اطلاعات از گزینه‌های زیر استفاده کنید.
+              تمام اطلاعات در یک فایل دیتابیس SQLite محلی (.db) ذخیره می‌شود.
+              این فایل کاملاً آفلاین است و می‌توانید آن را دانلود، پشتیبان‌گیری و بازیابی کنید.
             </p>
           </div>
 
@@ -185,7 +176,7 @@ const Settings: React.FC = () => {
               </Button>
               <input
                 type="file"
-                accept="application/json"
+                accept=".db,application/x-sqlite3"
                 onChange={handleImportData}
                 className="hidden"
               />
@@ -194,8 +185,8 @@ const Settings: React.FC = () => {
 
           <div className="p-4 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg">
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              <strong>توجه:</strong> حتماً به صورت منظم از اطلاعات خود پشتیبان تهیه کنید.
-              پاک کردن حافظه مرورگر منجر به از دست رفتن تمام اطلاعات می‌شود.
+              <strong>توجه:</strong> حتماً به صورت منظم فایل دیتابیس خود را دانلود و پشتیبان تهیه کنید.
+              فایل .db را می‌توانید در هر سیستمی بازیابی کنید و کاملاً قابل حمل است.
             </p>
           </div>
         </div>

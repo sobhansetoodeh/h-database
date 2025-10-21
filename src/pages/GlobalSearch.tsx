@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { db } from '@/lib/db';
+import { sqliteDb } from '@/lib/sqlite-db';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Search, User, FileText, Users } from 'lucide-react';
