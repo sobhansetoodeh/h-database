@@ -1,9 +1,23 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Users, Briefcase, GraduationCap, FileText } from 'lucide-react';
 import { sqliteDb } from '@/lib/sqlite-db';
 import { toPersianNumber } from '@/lib/persian-utils';
 import { Link } from 'react-router-dom';
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'باز':
+      return 'bg-green-500';
+    case 'بسته':
+      return 'bg-gray-500';
+    case 'در حال بررسی':
+      return 'bg-yellow-500';
+    default:
+      return 'bg-blue-500';
+  }
+};
 
 const Dashboard: React.FC = () => {
   const people = sqliteDb.getPeople();
@@ -94,7 +108,7 @@ const Dashboard: React.FC = () => {
                       <span className="font-medium">{caseItem.title}</span>
                       <Badge className={getStatusColor(caseItem.status)}>
                         {caseItem.status}
-                      </span>
+                      </Badge>
                     </div>
                     {caseItem.summary && (
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-1">

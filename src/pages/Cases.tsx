@@ -1,12 +1,26 @@
 import React, { useState } from 'react';
 import { sqliteDb } from '@/lib/sqlite-db';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { toPersianNumber } from '@/lib/persian-utils';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'باز':
+      return 'bg-green-500';
+    case 'بسته':
+      return 'bg-gray-500';
+    case 'در حال بررسی':
+      return 'bg-yellow-500';
+    default:
+      return 'bg-blue-500';
+  }
+};
 
 const Cases: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
